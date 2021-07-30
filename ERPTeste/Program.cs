@@ -24,12 +24,13 @@ namespace ERPTeste
                 switch (opcaoSelecionada)
                 {
                     case Opcao.Adicionar:
-                        p.AdicionaProdutos();                       
+                        p.AdicionaProdutos();  
                         break;
                     case Opcao.Visualizar:
                         p.ListaProdutos();
                         break;
                     case Opcao.Atualizar:
+                        p.AdicionaProdutos();
                         break;
                     case Opcao.Deletar:
                         break;

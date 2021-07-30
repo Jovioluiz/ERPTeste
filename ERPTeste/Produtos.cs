@@ -48,6 +48,9 @@ namespace ERPTeste
 
         public void AdicionaProdutos()
         {
+            const string insert = "insert into produtos (id_item, codigo, nome_produto, un_medida) values (@id, @cod, @nome, @un)";
+            const string update = "update produtos set codigo = @codigo, nome_produto = @nome_produto, un_medida = @un_medida where id_item = @id_item";
+
             //conexao com o banco
             ConexaoPG con = new ConexaoPG();
 
@@ -69,7 +72,7 @@ namespace ERPTeste
             {
                 try
                 {
-                    using (var command = new NpgsqlCommand("insert into produtos (id_item, codigo, nome_produto, un_medida) values (@id, @cod, @nome, @un)", conexao, transacao))
+                    using (var command = new NpgsqlCommand(insert, conexao, transacao))
                     {
                         command.Parameters.AddWithValue("id", prod.id_item);
                         command.Parameters.AddWithValue("cod", prod.codigo);
@@ -85,28 +88,59 @@ namespace ERPTeste
                 catch (Exception e)
                 {
                     transacao.Rollback();
-                    MessageBox.Show(e.Message, "Erro ao inserir os dados");
+                    MessageBox.Show("Erro ao inserir os dados do produto " + prod.nome_produto, e.Message);
                     throw;
                 }
             }
             else
             {
-                //update
+                try
+                {
+                    using (var comando = new NpgsqlCommand(update, conexao, transacao))
+                    {
+                        comando.Parameters.AddWithValue("codigo", prod.codigo);
+                        comando.Parameters.AddWithValue("nome_produto", prod.nome_produto);
+                        comando.Parameters.AddWithValue("un_medida", prod.un_medida);
+                        comando.Parameters.AddWithValue("id_item", prod.id_item);
+
+                        int nRows = comando.ExecuteNonQuery();
+                        transacao.Commit();
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    transacao.Rollback();
+                    MessageBox.Show(e.Message, "Erro ao atualizar os dados do item " + prod.nome_produto);
+                    throw;
+                }
             }
 
             con.FecharConexao(conexao);
 
         }
 
+
         public void ListaProdutos()
         {
-            for (int i = 0; i < 1; i++)
+            ConexaoPG con = new ConexaoPG();
+            NpgsqlConnection conexao = con.ConectaBanco();
+
+            using (var s = new NpgsqlCommand("select id_item, codigo, nome_produto, un_medida from produtos", conexao))
             {
-                Console.WriteLine(prod.codigo + "\n");
-                Console.WriteLine(prod.id_item + "\n");
-                Console.WriteLine(prod.nome_produto + "\n");
-                Console.WriteLine(prod.un_medida + "\n");
+                NpgsqlDataReader query = s.ExecuteReader();
+
+                //vai para o proximo registro
+                while (query.Read())
+                {
+                    Console.WriteLine(string.Format("ID: {0}", query.GetInt32(0).ToString()));
+                    Console.WriteLine(string.Format("Código: {1}", query.GetString(1)));
+                    Console.WriteLine(string.Format("Nome Produto: {2}", query.GetString(2)));
+                    Console.WriteLine(string.Format("UN Medida: {3}", query.GetString(3)));
+                }
+
             }
+            con.FecharConexao(conexao);
         }
     }
 }
